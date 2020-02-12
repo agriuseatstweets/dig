@@ -1,0 +1,40 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: agrius-dig
+spec:
+  completions: 30
+  parallelism: 4
+  backoffLimit: 2
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: agrius-dig
+        image: agriuseatstweets/dig:0.0.1
+        resources:
+          requests:
+            memory: "8Gi"
+        env:
+          - name: GOOGLE_APPLICATION_CREDENTIALS
+            value: "/home/jupyter/work/keys/key.json"
+          - name: KAFKA_BROKERS
+            value: "hydra-kafka:9092"
+          - name: KAFKA_POLL_TIMEOUT
+            value: "600"
+          - name: DIG_DATALAKE
+            value: "gs://spain-tweets-datalake"
+          - name: DIG_WAREHOUSE
+            value: "gs://spain-tweets-warehouse"
+          - name: DIG_PARTITIONS
+            value: "5"
+          - name: DIG_TOPIC
+            value: "dig"
+        volumeMounts:
+          - name: keys
+            mountPath: /home/jupyter/work/keys
+            readOnly: true
+      volumes:
+        - name: keys
+          secret:
+            secretName: agrius-dig-keys

@@ -1,0 +1,26 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: agrius-digtimer
+spec:
+  completions: 1
+  parallelism: 1
+  backoffLimit: 2
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: agrius-digtimer
+        image: agriuseatstweets/digtimer:0.0.1
+        resources:
+          requests:
+            memory: "50Mi"
+        env:
+          - name: KAFKA_BROKERS
+            value: "hydra-kafka:9092"
+          - name: PUB_TOPIC
+            value: "dig"
+          - name: DIGTIMER_START
+            value: "2018-10-01"
+          - name: DIGTIMER_FINISH
+            value: "2018-10-31"

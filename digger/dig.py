@@ -25,9 +25,9 @@ def read_schema(path):
     return schema
 
 def get_consumer():
-    kafka_brokers = env.str('KAFKA_BROKERS') # "localhost:9092"
-    topic = env.str('DIG_TOPIC') # tweets
-    poll_interval = env.str('KAFKA_POLL_INTERVAL', '1920000') # 32min
+    kafka_brokers = env.str('KAFKA_BROKERS')
+    topic = env.str('DIG_TOPIC')
+    poll_interval = env.str('KAFKA_POLL_INTERVAL', '1920000')
 
     c = Consumer({
         'bootstrap.servers': kafka_brokers,
@@ -79,9 +79,9 @@ def _get_date(msg):
     return date
 
 
-def get_task(log):
+def get_task(timeout):
     c = get_consumer()
-    msg = c.poll(300.)
+    msg = c.poll(timeout)
 
     # This should stop the process
     if not msg:
@@ -116,11 +116,12 @@ def main():
     datalake_path = env.str('DIG_DATALAKE')
     warehouse_path = env.str('DIG_WAREHOUSE')
     partitions = env.int('DIG_PARTITIONS')
+    poll_timeout = env.int('KAFKA_POLL_TIMEOUT')
 
     # get one message from kafka
-    belly_date, commit = get_task(log)
+    belly_date, commit = get_task(poll_timeout)
     if not belly_date:
-        log.warn(f'Belly found no task')
+        log.warn(f'Dig found no task')
         return
 
     # Read in from JSON and write out to Parquet
@@ -130,7 +131,7 @@ def main():
     # commit task
     commit()
 
-    log.warn(f'Belly finished writing {belly_date} to warehouse.')
+    log.warn(f'Dig finished writing {belly_date} to warehouse.')
 
 
 if __name__ == '__main__':
