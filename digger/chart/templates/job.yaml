@@ -1,0 +1,29 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: {{ include "dig.fullname" . }}
+spec:
+  schedule: "{{ .Values.schedule }}"
+  jobTemplate:
+    spec:
+      completions: {{ .Values.completions }}
+      parallelism: {{ .Values.parallelism }}
+      backoffLimit: {{ .Values.backoffLimit }}
+      template:
+        spec:
+        {{- with .Values.imagePullSecrets }}
+          imagePullSecrets:
+            {{- toYaml . | nindent 12 }}
+        {{- end }}
+          restartPolicy: OnFailure
+          containers:
+            - name: {{ .Chart.Name }}
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              terminationMessagePolicy: FallbackToLogsOnError
+              env:
+                {{- toYaml .Values.env | nindent 16 }}
+              resources:
+                {{- toYaml .Values.resources | nindent 16 }}
+
+

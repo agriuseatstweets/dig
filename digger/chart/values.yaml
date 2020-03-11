@@ -1,0 +1,12 @@
+schedule: ""
+completions: 1
+parallelism: 1
+backoffLimit: 1
+
+image: {}
+  # tag: 
+  # repository: 
+  # pullPolicy: 
+
+env: {}
+resources: {}
