@@ -27,11 +27,12 @@ def read_schema(path):
 def get_consumer():
     kafka_brokers = env.str('KAFKA_BROKERS')
     topic = env.str('DIG_TOPIC')
+    group = env.str('DIG_GROUP')
     poll_interval = env.str('KAFKA_POLL_INTERVAL', '1920000')
 
     c = Consumer({
         'bootstrap.servers': kafka_brokers,
-        'group.id': 'dig',
+        'group.id': group,
         'auto.offset.reset': 'earliest',
         'enable.auto.commit': False,
 	"max.poll.interval.ms": poll_interval
