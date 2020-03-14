@@ -17,13 +17,21 @@ spec:
         {{- end }}
           restartPolicy: OnFailure
           containers:
-            - name: {{ .Chart.Name }}
-              image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-              imagePullPolicy: {{ .Values.image.pullPolicy }}
-              terminationMessagePolicy: FallbackToLogsOnError
-              env:
-                {{- toYaml .Values.env | nindent 16 }}
-              resources:
-                {{- toYaml .Values.resources | nindent 16 }}
-
-
+          - name: {{ .Chart.Name }}
+            image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+            imagePullPolicy: {{ .Values.image.pullPolicy }}
+            resources:
+              {{- toYaml .Values.resources | nindent 14 }}
+            terminationMessagePolicy: FallbackToLogsOnError
+            env:
+              - name: GOOGLE_APPLICATION_CREDENTIALS
+                value: "/home/jupyter/work/keys/key.json"
+                {{- toYaml .Values.env | nindent 14 }}
+            volumeMounts:
+              - name: keys
+                mountPath: /home/jupyter/work/keys
+                readOnly: true
+          volumes:
+            - name: keys
+              secret:
+                secretName: {{ .Values.keySecret }}

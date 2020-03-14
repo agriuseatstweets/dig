@@ -1,12 +1,13 @@
 schedule: ""
+keySecret: ""
 completions: 1
 parallelism: 1
 backoffLimit: 1
 
-image: {}
-  # tag: 
-  # repository: 
-  # pullPolicy: 
+image:
+  repository: agriuseatstweets/dig
+  tag: 0.0.1
+  pullPolicy: IfNotPresent
 
-env: {}
+env: []
 resources: {}
