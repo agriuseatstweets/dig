@@ -1,18 +1,11 @@
-from gcsfs import GCSFileSystem
 import pickle
 import os
-from pyspark.sql import SparkSession
-from confluent_kafka import Consumer, KafkaError
-import json
-from clize import run
-from copy import deepcopy
-from os import path
-from time import sleep
-from math import ceil
-from pyspark.sql.functions import col
-from confluent_kafka import TopicPartition
-from environs import Env
 from datetime import datetime
+from gcsfs import GCSFileSystem
+from pyspark.sql import SparkSession
+from confluent_kafka import Consumer
+from clize import run
+from environs import Env
 
 env = Env()
 
@@ -53,12 +46,18 @@ def build_spark():
         .builder \
         .master('local[2]') \
         .appName('belly') \
-        .config("spark.jars", "/home/jupyter/work/gcs-connector-hadoop2-latest.jar") \
-        .config("spark.hadoop.fs.gs.impl", "com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystem") \
-        .config("spark.hadoop.google.cloud.auth.service.account.enable", "true") \
-        .config("spark.hadoop.google.cloud.auth.service.account.json.keyfile", "/home/jupyter/work/keys/key.json") \
-        .config("spark.hadoop.mapreduce.fileoutputcommitter.algorithm.version", "2") \
-        .config("spark.hadoop.mapreduce.fileoutputcommitter.cleanup-failures.ignored", "false") \
+        .config("spark.jars",
+                "/home/jupyter/work/gcs-connector-hadoop2-latest.jar") \
+        .config("spark.hadoop.fs.gs.impl",
+                "com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystem") \
+        .config("spark.hadoop.google.cloud.auth.service.account.enable",
+                "true") \
+        .config("spark.hadoop.google.cloud.auth.service.account.json.keyfile",
+                "/home/jupyter/work/keys/key.json") \
+        .config("spark.hadoop.mapreduce.fileoutputcommitter.algorithm.version",
+                "2") \
+        .config("spark.hadoop.mapreduce.fileoutputcommitter.cleanup-failures.ignored",
+                "false") \
         .config("spark.sql.parquet.mergeSchema", "false") \
         .config("spark.sql.parquet.filterPushdown", "true") \
         .config("spark.sql.hive.metastorePartitionPruning", "true") \
@@ -92,9 +91,9 @@ def get_task(timeout):
     return d, lambda: c.commit(msg, asynchronous=False)
 
 
-def write_out(spark, df, outpath, date, partitions):
+def write_out(df, outpath, date, partitions):
     # We manually create partitions to allow overwrite mode
-    f = path.join(outpath, f'datestamp={date}')
+    f = os.path.join(outpath, f'datestamp={date}')
 
     df.dropDuplicates(['id']) \
       .drop('datestamp') \
@@ -103,19 +102,19 @@ def write_out(spark, df, outpath, date, partitions):
       .parquet(f, mode='overwrite')
 
 
-def read_in(spark, inpath, date):
-    schema = read_schema('gs://spain-tweets/schemas/tweet-clean.pickle')
+def read_in(spark, schema_path, inpath, date):
+    schema = read_schema(schema_path)
     df = spark.read.json(inpath, schema=schema, timestampFormat=RUBY_DATE)
     df = df.where(df.datestamp == date)
     return df
 
 
 def main():
-    env = Env()
     spark, log = build_spark()
 
     datalake_path = env.str('DIG_DATALAKE')
     warehouse_path = env.str('DIG_WAREHOUSE')
+    schema_path = env.str('DIG_SCHEMA')
     partitions = env.int('DIG_PARTITIONS')
     poll_timeout = env.int('KAFKA_POLL_TIMEOUT')
 
@@ -126,8 +125,8 @@ def main():
         return
 
     # Read in from JSON and write out to Parquet
-    df = read_in(spark, datalake_path, belly_date)
-    write_out(spark, df, warehouse_path, belly_date, partitions)
+    df = read_in(spark, schema_path, datalake_path, belly_date)
+    write_out(df, warehouse_path, belly_date, partitions)
 
     # commit task
     commit()
