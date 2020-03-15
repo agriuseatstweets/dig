@@ -3,9 +3,9 @@ kind: Job
 metadata:
   name: agrius-dig
 spec:
-  completions: 30
-  parallelism: 4
-  backoffLimit: 2
+  completions: 153
+  parallelism: 1
+  backoffLimit: 3
   template:
     spec:
       restartPolicy: OnFailure
@@ -14,14 +14,15 @@ spec:
         image: agriuseatstweets/dig:0.0.1
         resources:
           requests:
-            memory: "8Gi"
+            cpu: "1500m"
+            memory: "3Gi"
         env:
           - name: GOOGLE_APPLICATION_CREDENTIALS
             value: "/home/jupyter/work/keys/key.json"
           - name: KAFKA_BROKERS
             value: "hydra-kafka:9092"
           - name: KAFKA_POLL_TIMEOUT
-            value: "600"
+            value: "1200"
           - name: DIG_DATALAKE
             value: "gs://spain-tweets-datalake"
           - name: DIG_WAREHOUSE

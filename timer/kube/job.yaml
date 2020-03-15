@@ -17,10 +17,10 @@ spec:
             memory: "50Mi"
         env:
           - name: KAFKA_BROKERS
-            value: "hydra-kafka:9092"
+            value: "kafka-headless.default.svc.cluster.local:29092"
           - name: PUB_TOPIC
-            value: "dig"
+            value: "spain-dig"
           - name: DIGTIMER_START
-            value: "2018-10-01"
+            value: "2018-01-01"
           - name: DIGTIMER_FINISH
-            value: "2018-10-31"
+            value: "2018-07-31"
